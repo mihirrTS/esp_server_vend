@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🥧 Raspberry Pi Vending Machine</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>🥧 Raspberry Pi Vending Machine</h1>
+        <p>ESP32 + Raspberry Pi Vending System</p>
+        
+        <div class="vending-slots">
+            <button class="vending-button" data-slot="1">
+                <span class="slot-number">1</span>
+                <span class="slot-label">Slot 1</span>
+            </button>
+            <button class="vending-button" data-slot="2">
+                <span class="slot-number">2</span>
+                <span class="slot-label">Slot 2</span>
+            </button>
+            <button class="vending-button" data-slot="3">
+                <span class="slot-number">3</span>
+                <span class="slot-label">Slot 3</span>
+            </button>
+            <button class="vending-button" data-slot="4">
+                <span class="slot-number">4</span>
+                <span class="slot-label">Slot 4</span>
+            </button>
+            <button class="vending-button" data-slot="5">
+                <span class="slot-number">5</span>
+                <span class="slot-label">Slot 5</span>
+            </button>
+        </div>
+        
+        <div class="status-section">
+            <h3>📊 System Status</h3>
+            <div id="message" class="message-box">Ready to vend</div>
+            <div id="esp32-status" class="esp32-status">
+                <span class="status-indicator offline">●</span>
+                <span class="status-text">ESP32: Checking connection...</span>
+            </div>
+            <div id="communication-mode" class="communication-info">
+                <span class="mode-indicator">🔗</span>
+                <span class="mode-text">Communication: Auto-detecting...</span>
+            </div>
+            <div id="last-action" class="action-log">No actions yet</div>
+        </div>
+        
+        <div class="pi-features">
+            <h3>🥧 Raspberry Pi Features</h3>
+            <div class="pi-info">
+                <div class="info-item">
+                    <span class="info-label">Serial Communication:</span>
+                    <span id="serial-status" class="info-value">Checking...</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">WiFi ESP32 Devices:</span>
+                    <span id="wifi-devices" class="info-value">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Server Mode:</span>
+                    <span class="info-value">Production Ready</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="optional-features">
+            <h3>⚙️ Optional: Customize Slot Names</h3>
+            <div class="slot-names">
+                <input type="text" id="slot1-name" placeholder="Slot 1 Name (e.g., Coke)" maxlength="20">
+                <input type="text" id="slot2-name" placeholder="Slot 2 Name (e.g., Chips)" maxlength="20">
+                <input type="text" id="slot3-name" placeholder="Slot 3 Name (e.g., Soda)" maxlength="20">
+                <input type="text" id="slot4-name" placeholder="Slot 4 Name (e.g., Candy)" maxlength="20">
+                <input type="text" id="slot5-name" placeholder="Slot 5 Name (e.g., Water)" maxlength="20">
+                <button id="update-names" class="update-button">Update Names</button>
+            </div>
+        </div>
+        
+        <div class="debug-section">
+            <h3>🛠️ Debug Information</h3>
+            <div class="debug-actions">
+                <button id="test-serial" class="debug-button">Test Serial</button>
+                <button id="check-devices" class="debug-button">Check Devices</button>
+                <button id="view-history" class="debug-button">View History</button>
+            </div>
+            <div id="debug-output" class="debug-output">Ready for debugging...</div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

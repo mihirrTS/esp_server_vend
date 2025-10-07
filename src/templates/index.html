@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vending Machine Test Interface</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>🏪 Vending Machine Test Interface</h1>
+        <p>Click any slot button to test the vending system</p>
+        
+        <div class="vending-slots">
+            <button class="vending-button" data-slot="1">
+                <span class="slot-number">1</span>
+                <span class="slot-label">Slot 1</span>
+            </button>
+            <button class="vending-button" data-slot="2">
+                <span class="slot-number">2</span>
+                <span class="slot-label">Slot 2</span>
+            </button>
+            <button class="vending-button" data-slot="3">
+                <span class="slot-number">3</span>
+                <span class="slot-label">Slot 3</span>
+            </button>
+            <button class="vending-button" data-slot="4">
+                <span class="slot-number">4</span>
+                <span class="slot-label">Slot 4</span>
+            </button>
+            <button class="vending-button" data-slot="5">
+                <span class="slot-number">5</span>
+                <span class="slot-label">Slot 5</span>
+            </button>
+        </div>
+        
+        <div class="status-section">
+            <h3>📊 System Status</h3>
+            <div id="message" class="message-box">Ready to vend</div>
+            <div id="esp32-status" class="esp32-status">
+                <span class="status-indicator offline">●</span>
+                <span class="status-text">ESP32: Checking connection...</span>
+            </div>
+            <div id="last-action" class="action-log">No actions yet</div>
+        </div>
+        
+        <div class="optional-features">
+            <h3>⚙️ Optional: Customize Slot Names</h3>
+            <div class="slot-names">
+                <input type="text" id="slot1-name" placeholder="Slot 1 Name (e.g., Coke)" maxlength="20">
+                <input type="text" id="slot2-name" placeholder="Slot 2 Name (e.g., Chips)" maxlength="20">
+                <input type="text" id="slot3-name" placeholder="Slot 3 Name (e.g., Soda)" maxlength="20">
+                <input type="text" id="slot4-name" placeholder="Slot 4 Name (e.g., Candy)" maxlength="20">
+                <input type="text" id="slot5-name" placeholder="Slot 5 Name (e.g., Water)" maxlength="20">
+                <button id="update-names" class="update-button">Update Names</button>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
