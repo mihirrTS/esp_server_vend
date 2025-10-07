@@ -4,13 +4,26 @@ Production-ready vending machine system optimized for **Raspberry Pi OS**. Featu
 
 ## 🚀 Quick Setup
 
-### **One-Command Installation:**
+### **One-Command Setup:**
 ```bash
-chmod +x setup_and_run.sh
-./setup_and_run.sh    # Complete setup and startup
+# One-time setup (creates virtual environment, installs dependencies)
+chmod +x setup.sh && ./setup.sh
+
+# Start server (run this each time you want to start the server)
+chmod +x start.sh && ./start.sh
 ```
 
-### **Manual Setup:**
+### **What the Setup Script Does:**
+- ✅ **Checks Python 3**: Installs if missing
+- ✅ **Creates Virtual Environment**: Isolated Python environment (only if needed)
+- ✅ **Installs Dependencies**: Flask, PySerial, etc. (only if needed) 
+- ✅ **Sets Up Permissions**: Adds user to dialout group for ESP32 access
+- ✅ **Tests System**: Runs Pi-specific system test
+- ✅ **Provides Next Steps**: Clear instructions for starting the server
+
+The setup script is **smart** - it only installs what's missing, so it's fast on subsequent runs.
+
+### **Manual Setup (Alternative):**
 ```bash
 # Update system
 sudo apt update && sudo apt upgrade -y

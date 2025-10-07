@@ -26,30 +26,61 @@ flask-vending-machine/
 │   ├── install_arduino_cli.sh     # Arduino CLI installation script
 │   ├── test_system.py             # Pi system test script
 │   └── templates/, static/        # Pi web interface
-├── esp32_mock_vend.ino           # 🔌 ESP32 USB serial firmware
-├── esp32_wifi_vend.ino           # 📡 ESP32 WiFi firmware
+├── esp32_mock_vend/               # 🔌 ESP32 USB serial firmware folder
+│   └── esp32_mock_vend.ino        # ESP32 USB serial firmware
+├── esp32_wifi_vend/               # 📡 ESP32 WiFi firmware folder  
+│   └── esp32_wifi_vend.ino        # ESP32 WiFi firmware
 ├── esp32_serial.py               # Python serial communication module
-├── setup_and_run.bat             # 🚀 Windows setup script
+├── setup.bat                      # 🚀 Windows setup script
+├── start.bat                      # ▶️ Windows start server script
 ├── test_system.py                # 🧪 System test script
 └── requirements.txt              # Python dependencies
 ```
 
 ## 🚀 Quick Start
 
-### **Automated Setup (Recommended)**
+### **New User? Start Here:**
 
 **Windows:**
 ```powershell
-.\setup_and_run.bat
+# Step 1: One-time setup (only run this once)
+.\setup.bat
+
+# Step 2: Start server (run this each time)
+.\start.bat
 ```
 
 **Linux/Raspberry Pi:**
 ```bash
 cd rasp_pi
-chmod +x setup_and_run.sh && ./setup_and_run.sh
+
+# Step 1: One-time setup (only run this once)
+chmod +x setup.sh && ./setup.sh
+
+# Step 2: Start server (run this each time)  
+chmod +x start.sh && ./start.sh
 ```
 
-### **Manual Setup**
+### ### **📋 Simple Workflow:**
+
+```
+First Time:     .\setup.bat  →  .\start.bat  →  http://localhost:5000
+Every Time:     .\start.bat  →  http://localhost:5000
+```
+
+**What each script does:**
+- **`setup.bat/setup.sh`**: Prepares your computer (virtual environment, dependencies)
+- **`start.bat/start.sh`**: Starts the web server 
+- **Web interface**: `http://localhost:5000` - click buttons to vend!
+
+### **What the Setup Script Does:**
+- ✅ **Checks Python Installation**: Verifies Python is available
+- ✅ **Creates Virtual Environment**: Isolated Python environment (only if needed)
+- ✅ **Installs Dependencies**: Flask, PySerial, etc. (only if needed)
+- ✅ **Tests System**: Runs system test to verify everything works
+- ✅ **Provides Next Steps**: Clear instructions for starting the server
+
+### **Manual Setup (Alternative)**
 
 1. **Install Dependencies:**
    ```bash
@@ -108,8 +139,8 @@ python3 test_system.py
 
 | Method | Best For | Firmware | Range | Setup |
 |--------|----------|----------|--------|--------|
-| **🔌 USB Serial** | Development, Testing | `esp32_mock_vend.ino` | Cable length | Plug & play |
-| **📡 WiFi Network** | Production, Multiple devices | `esp32_wifi_vend.ino` | WiFi range | Network config |
+| **🔌 USB Serial** | Development, Testing | `esp32_mock_vend/esp32_mock_vend.ino` | Cable length | Plug & play |
+| **📡 WiFi Network** | Production, Multiple devices | `esp32_wifi_vend/esp32_wifi_vend.ino` | WiFi range | Network config |
 | **🖥️ Simulation** | Testing without hardware | None needed | N/A | Just run Flask |
 
 ### **🔌 Method 1: USB Serial (Recommended for Testing)**
@@ -138,7 +169,7 @@ sudo usermod -a -G dialout $USER
 ```
 
 #### **Step 3: Flash ESP32 Firmware**
-1. Open `esp32_mock_vend.ino` in Arduino IDE
+1. Open `esp32_mock_vend/esp32_mock_vend.ino` in Arduino IDE
 2. Select board: **ESP32 Dev Module**
 3. Select correct port
 4. Upload code
@@ -161,7 +192,7 @@ sudo usermod -a -G dialout $USER
 ### **📡 Method 2: WiFi Network (Production)**
 
 #### **Step 1: Configure WiFi Credentials**
-Edit `esp32_wifi_vend.ino`:
+Edit `esp32_wifi_vend/esp32_wifi_vend.ino`:
 ```cpp
 const char* WIFI_SSID = "YOUR_WIFI_NETWORK";      // Your WiFi name
 const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD"; // Your WiFi password
@@ -187,7 +218,7 @@ In Arduino IDE:
 2. Search and install: **ArduinoJson** by Benoit Blanchon
 
 #### **Step 4: Flash WiFi Firmware**
-1. Open `esp32_wifi_vend.ino` in Arduino IDE
+1. Open `esp32_wifi_vend/esp32_wifi_vend.ino` in Arduino IDE
 2. Upload to ESP32
 
 #### **Step 5: Test WiFi Connection**
@@ -360,7 +391,7 @@ pip install --upgrade flask pyserial
 - **Frontend UI**: `src/templates/index.html`
 - **Styling**: `src/static/css/styles.css`
 - **JavaScript**: `src/static/js/app.js`
-- **ESP32 Firmware**: `esp32_mock_vend.ino` / `esp32_wifi_vend.ino`
+- **ESP32 Firmware**: `esp32_mock_vend/esp32_mock_vend.ino` / `esp32_wifi_vend/esp32_wifi_vend.ino`
 
 ### **Hardware Integration**
 Replace simulation code with actual hardware control:
