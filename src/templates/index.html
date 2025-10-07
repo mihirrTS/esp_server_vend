@@ -41,7 +41,87 @@
                 <span class="status-indicator offline">●</span>
                 <span class="status-text">ESP32: Checking connection...</span>
             </div>
+            <div id="monitor-status-display" class="esp32-status">
+                <span class="status-indicator offline">●</span>
+                <span class="status-text">Monitor: Stopped</span>
+            </div>
             <div id="last-action" class="action-log">No actions yet</div>
+        </div>
+        
+        <div class="connection-section">
+            <h3>🔌 Connection Management</h3>
+            <div class="connection-controls">
+                <div class="connection-type">
+                    <h4>USB Serial Connection</h4>
+                    <div class="serial-controls">
+                        <button id="scan-ports" class="control-button">🔍 Scan Ports</button>
+                        <select id="port-select" disabled>
+                            <option value="">Select a port...</option>
+                        </select>
+                        <button id="connect-serial" class="control-button" disabled>📱 Connect</button>
+                        <button id="disconnect-serial" class="control-button" disabled>🔌 Disconnect</button>
+                    </div>
+                    <div id="serial-status" class="connection-status">Not connected</div>
+                </div>
+                
+                <div class="connection-type">
+                    <h4>WiFi Network Connection</h4>
+                    <div id="wifi-devices" class="wifi-status">
+                        <span class="status-text">No WiFi devices detected</span>
+                    </div>
+                    <div class="connection-info">
+                        <small>WiFi devices auto-connect when available</small>
+                    </div>
+                </div>
+                
+                <div class="connection-summary">
+                    <div id="communication-mode" class="mode-display">
+                        Mode: <span id="current-mode">Checking...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="device-selection-section">
+            <h3>🎯 Device Selection</h3>
+            <div class="device-controls">
+                <div class="device-list">
+                    <h4>Available Devices</h4>
+                    <div id="device-list" class="device-grid">
+                        <div class="device-placeholder">No devices detected</div>
+                    </div>
+                </div>
+                <div class="active-device">
+                    <h4>Active Device</h4>
+                    <div id="active-device-display" class="active-device-info">
+                        <span class="device-status">Auto-select (priority: Serial → WiFi)</span>
+                    </div>
+                    <div class="device-actions">
+                        <button id="refresh-devices" class="control-button">🔄 Refresh Devices</button>
+                        <button id="auto-select-device" class="control-button">🎯 Auto Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="monitor-section">
+            <h3>📡 ESP32 Communication Monitor</h3>
+            <div class="monitor-controls">
+                <div class="monitor-buttons">
+                    <button id="start-monitor" class="control-button monitor-btn">🔍 Start Monitor</button>
+                    <button id="stop-monitor" class="control-button monitor-btn" disabled>🛑 Stop Monitor</button>
+                    <button id="clear-log" class="control-button monitor-btn">🗑️ Clear Log</button>
+                    <button id="send-test" class="control-button monitor-btn">🧪 Send Test Commands</button>
+                    <button id="add-test-data" class="control-button monitor-btn">📝 Add Test Data</button>
+                </div>
+                <div class="monitor-info">
+                    <span id="monitor-status" class="monitor-status">Monitor stopped</span>
+                    <span id="log-count" class="log-count">0 messages</span>
+                </div>
+            </div>
+            <div id="communication-log" class="communication-log">
+                <div class="log-placeholder">Click "Start Monitor" to see ESP32 communication</div>
+            </div>
         </div>
         
         <div class="optional-features">
