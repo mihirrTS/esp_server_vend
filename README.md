@@ -1,15 +1,36 @@
-# 🏪 Flask Vending Machine
+# Flask ESP32 Vending Machine System
 
-A complete vending machine control system with Flask backend and ESP32 hardware interface. Supports both USB serial and WiFi communication with automatic fallback and cross-platform compatibility.
+A comprehensive vending machine control system with **multi-device ESP32 support** through both USB serial and WiFi connections, featuring **automatic IP discovery** for zero-configuration WiFi setup.
 
-## ✨ Features
+## 🌟 Key Features
 
-- **Web-based Interface**: Professional 5-slot vending machine UI
-- **Dual Communication**: USB serial + WiFi ESP32 support with auto-fallback
-- **Cross-Platform**: Windows development + Raspberry Pi production ready
-- **Smart Detection**: Automatic ESP32 port/device detection
-- **Complete Setup**: One-command installation and startup
-- **Hardware Ready**: Real ESP32 firmware included
+### Multi-Device ESP32 Management
+- **Automatic device detection** and connection management
+- **USB Serial connection** for direct ESP32 communication
+- **WiFi connection** support with **automatic Flask server discovery**
+- **Zero-configuration WiFi setup** - no manual IP configuration required
+- **Device switching** - seamlessly switch between multiple ESP32 devices
+- **Priority-based selection** - Serial connections take priority over WiFi
+
+### Automatic WiFi Discovery System
+- **UDP broadcast discovery** - ESP32 automatically finds Flask server on the network
+- **No manual IP configuration** - ESP32 discovers server IP automatically via UDP broadcast on port 12346
+- **Dynamic server detection** - works across different networks and IP ranges
+- **Automatic connection establishment** - ESP32 connects immediately upon discovery
+- **Network-agnostic operation** - works on any local network configuration
+
+### Enhanced Web Interface
+- **Real-time status monitoring** of all connected devices
+- **Interactive device selection** with visual status indicators
+- **Live communication monitoring** to see ESP32 messages in real-time
+- **Multi-connection support** - manage both serial and WiFi devices simultaneously
+- **Automatic refresh cycles** - devices and status update automatically
+
+### System Validation
+- **Automated system check** script (`check_system.py`)
+- **5-test validation suite** covering requirements, environment, hardware, Flask server, and connectivity
+- **Detailed diagnostics** with specific recommendations for issues
+- **End-to-end testing** including WiFi discovery validation
 
 ## 📁 Project Structure
 
@@ -203,14 +224,14 @@ python check_system.py
    Waiting for commands from Flask server...
    ```
 
-### 📡 Method 2: WiFi Network (Production)
+### 📡 Method 2: WiFi Network with Auto-Discovery (Production)
 
-#### Step 1: Configure WiFi Credentials
+#### Step 1: Configure WiFi Credentials (No IP Configuration Needed!)
 Edit `esp_code/esp32_wifi_vend/esp32_wifi_vend.ino`:
 ```cpp
 const char* WIFI_SSID = "YOUR_WIFI_NETWORK";      // Your WiFi name
 const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD"; // Your WiFi password
-const char* FLASK_SERVER_IP = "192.168.1.100";   // Your computer's IP
+// NOTE: No FLASK_SERVER_IP needed - auto-discovery handles this!
 ```
 
 #### Step 2: Install Arduino Libraries
@@ -218,9 +239,34 @@ In Arduino IDE:
 1. Go to **Tools → Manage Libraries**
 2. Search and install: **ArduinoJson** by Benoit Blanchon
 
-#### Step 3: Flash WiFi Firmware
+#### Step 3: Flash WiFi Firmware with Auto-Discovery
 1. Open `esp_code/esp32_wifi_vend/esp32_wifi_vend.ino` in Arduino IDE
 2. Upload to ESP32
+3. **The ESP32 automatically discovers the Flask server using UDP broadcast**
+4. **No manual IP configuration required** - works on any network!
+
+#### How Auto-Discovery Works
+The WiFi ESP32 uses an intelligent UDP discovery system:
+
+1. **ESP32 connects to WiFi** using your credentials
+2. **ESP32 broadcasts UDP discovery request** on port 12346 to find Flask server
+3. **Flask server responds** with its IP address automatically  
+4. **ESP32 connects immediately** to discovered server via HTTP
+5. **Normal operation begins** - no manual configuration needed!
+
+**Benefits:**
+- ✅ **Zero Configuration**: No need to find or configure server IP addresses
+- ✅ **Dynamic Networks**: Works with DHCP and changing IP addresses  
+- ✅ **Multi-Network**: Automatically adapts to different WiFi networks
+- ✅ **Plug & Play**: Just power on ESP32 and it finds the server
+- ✅ **Robust**: Handles network changes and reconnections automatically
+
+#### Monitoring Auto-Discovery
+You can monitor the discovery process:
+1. **ESP32 Serial Monitor**: Shows discovery attempts and success messages
+2. **Flask Server Console**: Shows incoming discovery requests and responses
+3. **Web Interface**: Displays WiFi devices as they auto-connect
+4. **Communication Monitor**: Real-time view of discovery and connection process
 
 ## 🌐 Web Interface
 
@@ -292,7 +338,21 @@ The check will guide you to specific solutions based on what it finds.
 **❌ "WiFi connection failed"**
 - Double-check SSID and password in ESP32 code
 - Verify WiFi network is 2.4GHz (ESP32 doesn't support 5GHz)
-- Check Flask server IP address in ESP32 code
+- ~~Check Flask server IP address in ESP32 code~~ (Not needed with auto-discovery!)
+
+**❌ "Auto-discovery not working"**
+- **Verify network connectivity**: ESP32 and Flask server must be on same network subnet
+- **Check firewall settings**: Ensure ports 5000 and 12346 are not blocked
+- **Router configuration**: Some routers block UDP broadcast - check AP isolation settings
+- **Network timing**: Allow 30-60 seconds for discovery on busy networks
+- **Monitor discovery process**: Check ESP32 serial output for discovery attempts
+- **Verify UDP service**: Flask console should show "UDP discovery service started"
+
+**❌ "ESP32 connects but can't communicate"**
+- **Check discovery success**: ESP32 serial monitor should show "Flask server discovered"
+- **Verify HTTP connection**: After discovery, ESP32 should connect via HTTP to Flask
+- **Network stability**: Ensure stable WiFi connection during operation
+- **Server accessibility**: Test Flask server access from other devices on network
 
 **❌ "Port 5000 already in use"**
 ```bash
@@ -327,6 +387,72 @@ The web interface is fully responsive and works on mobile devices:
 - Touch-friendly buttons
 - Real-time status updates
 - Works on phones, tablets, any device with a browser
+
+## 🔧 Technical Details: Auto-Discovery System
+
+### UDP Discovery Protocol Implementation
+
+#### Flask Server Side (`src/app.py`)
+The Flask server runs a UDP discovery service in the background:
+
+```python
+# Automatic UDP discovery service on port 12346
+def start_udp_discovery_service():
+    def udp_discovery_handler():
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.bind(('', 12346))  # Listen on port 12346
+        while True:
+            data, addr = sock.recvfrom(1024)
+            if b"DISCOVER_FLASK_SERVER" in data:
+                # Respond with server IP
+                response = f"FLASK_SERVER_IP:{get_local_ip()}"
+                sock.sendto(response.encode(), addr)
+```
+
+#### ESP32 Firmware Side (`esp32_wifi_vend.ino`)
+The ESP32 implements intelligent discovery with retry logic:
+
+```cpp
+bool discoverFlaskServer() {
+    WiFiUDP udp;
+    udp.begin(12346);
+    
+    // Broadcast discovery request
+    udp.beginPacket(WiFi.localIP() | ~WiFi.subnetMask(), 12346);
+    udp.print("DISCOVER_FLASK_SERVER");
+    udp.endPacket();
+    
+    // Wait for server response
+    unsigned long timeout = millis() + 5000;
+    while (millis() < timeout) {
+        int packetSize = udp.parsePacket();
+        if (packetSize) {
+            String response = udp.readString();
+            if (response.startsWith("FLASK_SERVER_IP:")) {
+                // Extract and connect to discovered IP
+                flaskServerIP = response.substring(16);
+                return true;
+            }
+        }
+        delay(100);
+    }
+    return false; // Discovery failed
+}
+```
+
+### Discovery Process Flow
+1. **Flask Server Startup**: UDP discovery service starts automatically on port 12346
+2. **ESP32 WiFi Connection**: ESP32 connects to configured WiFi network
+3. **Broadcast Discovery**: ESP32 sends UDP broadcast to find Flask server
+4. **Server Response**: Flask server receives request and responds with its IP
+5. **Connection Establishment**: ESP32 connects to discovered IP via HTTP
+6. **Operation Begins**: Normal vending machine communication starts
+
+### Network Requirements
+- **Same Subnet**: ESP32 and Flask server must be on same network subnet
+- **UDP Broadcast Support**: Network must allow UDP broadcast (most do by default)
+- **Port Access**: Ports 5000 (Flask HTTP) and 12346 (UDP discovery) must be accessible
+- **No Special Configuration**: Works with standard home/office network setups
 
 ## 🌟 Production Features
 
