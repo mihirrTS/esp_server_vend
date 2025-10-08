@@ -167,3 +167,11 @@ python src/app.py  # Server starts on http://localhost:5000
 - [ ] **Documentation**: API documentation (OpenAPI/Swagger)
 
 **Result**: Enterprise-ready vending machine system with multi-device support, real-time monitoring, and scalable architecture.
+
+---
+
+## 📡 Server API Flow Example
+
+![Server API Communication Flow](https://github.com/mihirrTS/esp_server_vend/blob/main/server_api_ex.png)
+
+*Visual demonstration of API endpoints and communication flow between Flask server and ESP32 devices*
