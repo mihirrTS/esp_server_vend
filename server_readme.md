@@ -26,23 +26,200 @@ Web Interface → Flask Server → Device Manager → ESP32 (WiFi/Serial) → Ha
 | `/esp32/devices/list` | GET | List devices | - | `{"devices": [...], "active_device": "..."}` |
 | `/esp32/devices/select` | POST | Select device | `{"device_id": "ESP32_xxx"}` | `{"status": "success"}` |
 
-## 📡 ESP32 Communication
+## 📡 ESP32 Communication Overview
 
 ### WiFi Mode (Production)
-**Flow**: ESP32 → UDP Broadcast Discovery → HTTP Polling (2s intervals) → Command Execution
-```
-1. ESP32 broadcasts "DISCOVER_FLASK_SERVER" on port 12346
-2. Flask responds with "FLASK_SERVER_IP:{ip}"  
-3. ESP32 polls GET /esp32/wifi/command every 2 seconds
-4. Flask queues commands, ESP32 executes and reports back
-```
+- **Discovery**: ESP32 auto-finds Flask server via UDP broadcast (port 12346)
+- **Polling**: ESP32 polls server every 2 seconds for commands  
+- **Format**: JSON commands and responses
+- **Latency**: 2-3 seconds
 
 ### Serial Mode (Development)  
-**Flow**: Direct USB connection → Real-time bidirectional communication (50ms response)
+- **Connection**: Direct USB cable to computer
+- **Communication**: Real-time bidirectional
+- **Format**: Plain text commands with newline termination
+- **Latency**: 50-100ms
+
+## 🔌 Detailed Connection & Data Flow
+
+### Connection Establishment Process
+
+#### WiFi Connection Setup (Step-by-Step)
 ```
-Flask → ESP32: "VEND:3\n"
-ESP32 → Flask: "VEND_SUCCESS:3\n"
+1. ESP32 connects to WiFi network using SSID/password
+2. ESP32 broadcasts UDP packet "DISCOVER_FLASK_SERVER" to port 12346
+3. Flask server (listening on port 12346) responds with "FLASK_SERVER_IP:192.168.1.100"
+4. ESP32 extracts IP address and stores it
+5. ESP32 registers itself with Flask via POST /esp32/wifi/register
+6. ESP32 starts polling Flask every 2 seconds via GET /esp32/wifi/command
 ```
+
+#### Serial Connection Setup (Step-by-Step)
+```
+1. ESP32 connects via USB cable to computer
+2. Flask automatically scans COM ports for ESP32 devices
+3. Flask opens serial connection (115200 baud rate)
+4. Bidirectional communication established immediately
+5. Commands sent directly, responses received in real-time
+```
+
+### Data Format Specifications
+
+#### 📤 Server → ESP32 Commands (What Flask Sends)
+
+**WiFi Command Format (JSON):**
+```json
+{
+  "command": "VEND",
+  "slot": 3
+}
+```
+
+**Serial Command Format (Plain Text):**
+```
+VEND:3\n
+```
+
+**Available Commands:**
+- `VEND` - Dispense item from specified slot
+- `STATUS` - Request device status report
+- `RESET` - Restart ESP32 device
+
+#### 📥 ESP32 → Server Responses (What ESP32 Sends Back)
+
+**WiFi Registration (ESP32 announces itself):**
+```json
+POST /esp32/wifi/register
+{
+  "device_id": "ESP32_6CC8404FE03C",
+  "device_type": "wifi", 
+  "ip_address": "192.168.1.105",
+  "firmware_version": "1.2.0",
+  "slots_available": 5,
+  "status": "online"
+}
+```
+
+**WiFi Command Response (Operation result):**
+```json
+POST /esp32/wifi/confirm
+{
+  "device_id": "ESP32_6CC8404FE03C",
+  "slot": 3,
+  "success": true,
+  "message": "Item dispensed successfully", 
+  "timestamp": 1696789234
+}
+```
+
+**Serial Response (Plain Text):**
+```
+VEND_SUCCESS:3
+VEND_FAILED:3
+STATUS_OK:READY:5_SLOTS
+ERROR:SLOT_EMPTY
+```
+
+### Communication Flow Examples
+
+#### Example 1: WiFi Vending Operation
+```
+1. User clicks "Vend Slot 3" on web interface
+2. Flask queues command: {"command": "VEND", "slot": 3}
+3. ESP32 polls: GET /esp32/wifi/command
+4. Flask responds with queued JSON command
+5. ESP32 executes vending operation
+6. ESP32 confirms: POST /esp32/wifi/confirm with success/failure
+7. Flask updates web interface with result
+```
+
+#### Example 2: Serial Vending Operation  
+```
+1. User clicks "Vend Slot 2" on web interface
+2. Flask immediately sends: "VEND:2\n" via serial
+3. ESP32 receives command within 50ms
+4. ESP32 executes vending operation
+5. ESP32 responds: "VEND_SUCCESS:2\n" 
+6. Flask receives response and updates interface
+```
+
+### ESP32 Code Implementation
+
+#### WiFi Command Polling (Every 2 seconds)
+```cpp
+void checkForCommands() {
+  String url = "http://" + FLASK_SERVER_IP + ":5000/esp32/wifi/command";
+  http.begin(url);
+  http.addHeader("Device-ID", WiFi.macAddress());
+  
+  int httpCode = http.GET();
+  if (httpCode == 200) {
+    String payload = http.getString();
+    if (payload != "NO_COMMAND") {
+      StaticJsonDocument<200> doc;
+      deserializeJson(doc, payload);
+      
+      String command = doc["command"];
+      int slot = doc["slot"];
+      
+      if (command == "VEND" && slot >= 1 && slot <= 5) {
+        vendSlot(slot);
+        sendConfirmation(slot, true, "Success");
+      }
+    }
+  }
+}
+```
+
+#### WiFi Response Confirmation
+```cpp
+void sendConfirmation(int slot, bool success, String message) {
+  String url = "http://" + FLASK_SERVER_IP + ":5000/esp32/wifi/confirm";
+  http.begin(url);
+  http.addHeader("Content-Type", "application/json");
+  
+  StaticJsonDocument<300> doc;
+  doc["device_id"] = WiFi.macAddress();
+  doc["slot"] = slot;
+  doc["success"] = success;
+  doc["message"] = message;
+  doc["timestamp"] = millis();
+  
+  String payload;
+  serializeJson(doc, payload);
+  http.POST(payload);
+}
+```
+
+### Network Requirements
+
+#### WiFi Setup Requirements
+- **ESP32 and Flask server must be on same WiFi network**
+- **UDP port 12346 must be open** (for auto-discovery)
+- **HTTP port 5000 must be accessible** (or 443 for HTTPS in production)
+- **No firewall blocking** between ESP32 and server
+
+#### Serial Setup Requirements  
+- **USB cable connection** between ESP32 and computer
+- **COM port available** (Windows: COM3, COM4, etc.)
+- **115200 baud rate** supported
+- **ESP32 drivers installed** on computer
+
+### Error Handling
+
+#### Common Connection Issues
+```
+WiFi Discovery Failed → Check network connectivity, firewall settings
+HTTP Timeout → Verify Flask server running, check IP address
+Serial Port Busy → Close other applications using COM port
+Command Failed → Check JSON format, slot number validity
+```
+
+#### ESP32 Recovery Mechanisms
+- **Auto-reconnect WiFi** if connection drops
+- **Retry failed HTTP requests** (3 attempts)
+- **Fall back to serial** if WiFi fails (when available)
+- **Restart ESP32** on critical errors
 
 ## 🗃️ Data Storage
 
